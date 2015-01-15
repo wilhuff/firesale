@@ -1,1 +1,9 @@
+node_modules
+dist
+.grunt
+.tmp
+.sass-cache
+bower_components
+
 *.swp
+.idea/workspace.xml
