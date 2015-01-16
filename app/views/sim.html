@@ -5,3 +5,7 @@
   <input placeholder="Symbols..." ng-model="symbols" class="form-control">
   <button type="submit" ng-click="simulate()" class="btn btn-primary">Go!</button>
 </form>
+
+<div ng-if="running">
+  <span class="bg-info">{{running.op}}</span>
+</div>

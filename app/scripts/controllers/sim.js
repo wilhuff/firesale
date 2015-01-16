@@ -10,21 +10,16 @@ angular.module('firesaleApp')
   .controller('SimCtrl', function ($scope, user, $firebase, fbutil) {
 
     $scope.symbols = '';
-
-    var ref = fbutil.ref('simulations').child(user.uid);
-    var sync = $firebase(ref).$asObject();
-    sync.$loaded().then(function(sim) {
-      if (!$scope.symbols) {
-        $scope.symbols = sim.symbols;
-      }
-    });
+    $scope.running = null;
 
     $scope.simulate = function() {
       console.log('Simulate symbols: ' + $scope.symbols);
 
-      ref.set({
-        'symbols': $scope.symbols,
-        'start': new Date().getTime()
-      })
+      var ref = fbutil.ref('simulations').push({
+        symbols: $scope.symbols,
+        started: Firebase.ServerValue.TIMESTAMP,
+        op: 'Starting...'
+      });
+      $scope.running = $firebase(ref).$asObject();
     }
   });
