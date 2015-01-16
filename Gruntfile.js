@@ -354,6 +354,15 @@ module.exports = function (grunt) {
         configFile: 'test/karma.conf.js',
         singleRun: true
       }
+    },
+
+    // Server-side test settings
+    jasmine_node: {
+      options: {
+        projectRoot: 'sim',
+        vendor: "sim/node_modules/**/*.js"
+      },
+      sim: 'sim/test/spec/'
     }
   });
 
