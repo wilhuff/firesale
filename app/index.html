@@ -26,7 +26,7 @@
         <ul class="nav nav-pills pull-right">
           <li class="active"><a ng-href="#">Home</a></li>
           <!-- //angularfire -->
-          <li><a ng-href="#/chat">chat</a></li>
+          <li><a ng-href="#/sim">sim</a></li>
           <li>
             <a ng-hide-auth="" href="#/login">log in</a>
             <a ng-show-auth="" href="#/account">account</a>
@@ -38,21 +38,9 @@
       <div ng-view=""></div>
 
       <div class="footer">
-        <p><span class="glyphicon glyphicon-heart"></span> from the Yeoman team, and from Firebase</p>
       </div>
     </div>
 
-
-    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID -->
-     <script>
-       !function(A,n,g,u,l,a,r){A.GoogleAnalyticsObject=l,A[l]=A[l]||function(){
-       (A[l].q=A[l].q||[]).push(arguments)},A[l].l=+new Date,a=n.createElement(g),
-       r=n.getElementsByTagName(g)[0],a.src=u,r.parentNode.insertBefore(a,r)
-       }(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-       ga('create', 'UA-XXXXX-X');
-       ga('send', 'pageview');
-    </script>
 
     <!-- build:js(.) scripts/oldieshim.js -->
     <!--[if lt IE 9]>
@@ -82,7 +70,7 @@
         <script src="scripts/controllers/main.js"></script>
         <script src="scripts/angularfire/config.js"></script>
         <script src="scripts/angularfire/firebase.utils.js"></script>
-        <script src="scripts/controllers/chat.js"></script>
+        <script src="scripts/controllers/sim.js"></script>
         <script src="scripts/filters/reverse.js"></script>
         <script src="scripts/angularfire/simpleLogin.js"></script>
         <script src="scripts/controllers/login.js"></script>

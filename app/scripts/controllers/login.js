@@ -38,15 +38,12 @@ angular.module('firesaleApp')
           .then(redirect, showError);
       }
     };
-    
 
     function redirect() {
-      $location.path('/account');
+      $location.path('/sim');
     }
 
     function showError(err) {
       $scope.err = err;
     }
-
-
   });

@@ -67,9 +67,9 @@ angular.module('firesaleApp')
         controller: 'LoginCtrl'
       })
 
-      .when('/chat', {
-        templateUrl: 'views/chat.html',
-        controller: 'ChatCtrl'
+      .whenAuthenticated('/sim', {
+        templateUrl: 'views/sim.html',
+        controller: 'SimCtrl'
       })
 
       .whenAuthenticated('/account', {
@@ -77,11 +77,7 @@ angular.module('firesaleApp')
         controller: 'AccountCtrl'
       })
 
-      .when('/chat', {
-        templateUrl: 'views/chat.html',
-        controller: 'ChatCtrl'
-      })
-      .otherwise({redirectTo: '/'});
+      .otherwise({redirectTo: '/login'});
   }])
 
   /**
