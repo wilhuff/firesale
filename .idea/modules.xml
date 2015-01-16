@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$//web.iml" filepath="$PROJECT_DIR$//web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sim/sim.iml" filepath="$PROJECT_DIR$/sim/sim.iml" />
+      <module fileurl="file://$PROJECT_DIR$/web.iml" filepath="$PROJECT_DIR$/web.iml" />
     </modules>
   </component>
 </project>
