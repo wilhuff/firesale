@@ -12,11 +12,16 @@ angular.module('firesaleApp')
     $scope.symbols = '';
     $scope.running = null;
 
+    $scope.startDate = new Date(2013, 0, 1);  // January 1
+    $scope.endDate = new Date(); // Today
+
     $scope.simulate = function() {
       console.log('Simulate symbols: ' + $scope.symbols);
 
       var ref = fbutil.ref('simulations').push({
         symbols: $scope.symbols,
+        startDate: $scope.startDate.getTime(),
+        endDate: $scope.endDate.getTime(),
         started: Firebase.ServerValue.TIMESTAMP,
         op: 'Starting...'
       });

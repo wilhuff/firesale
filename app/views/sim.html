@@ -2,8 +2,26 @@
 <h2>Simulate a portfolio</h2>
 
 <form>
-  <input placeholder="Symbols..." ng-model="symbols" class="form-control">
-  <button type="submit" ng-click="simulate()" class="btn btn-primary">Go!</button>
+  <div class="form-group">
+    <label for="symbols">Symbols</label>
+    <input id="symbols" placeholder="Symbols..." ng-model="symbols" class="form-control">
+    <p class="help-block">A list of ticker symbols</p>
+  </div>
+
+  <div class="form-group">
+    <label for="startDate">Start Date</label>
+    <input type="date" id="startDate" ng-model="startDate" class="form-control">
+    <p class="help-block">The earliest date from which to simulate.</p>
+  </div>
+
+  <div class="form-group">
+    <label for="endDate">End Date</label>
+    <input type="date" id="endDate" ng-model="endDate" class="form-control">
+  </div>
+
+  <div class="form-group">
+    <button type="submit" ng-click="simulate()" class="btn btn-primary">Go!</button>
+  </div>
 </form>
 
 <div ng-if="running">
