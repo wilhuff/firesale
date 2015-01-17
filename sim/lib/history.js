@@ -1,7 +1,10 @@
 'use strict';
 
-var async = require('async');
-var util = require('./util');
+var when = require('when');
+var nodefn = require('when/node');
+var callbacks = require('when/callbacks');
+
+
 var yahooFinance = require('yahoo-finance');
 
 function History(sim) {
@@ -15,25 +18,64 @@ function History(sim) {
  */
 History.prototype.load = function() {
   var outer = this;
-  async.each(this.sim.symbols, this.loadOne.bind(this), function(err) {
-    outer.sim.progress('Historical data loaded');
-  })
+  when.map(this.sim.symbols, this.loadOne.bind(this))
+    .then(function(results) {
+      return outer.sim.progress('Historical data loaded');
+    })
+    .catch(function(err) {
+      return outer.sim.error(err, 'Historical data load failed: ');
+    });
 };
 
 /**
  * Loads history for one symbol.
  *
  * @param symbol a ticker symbol, e.g. "SPY"
- * @param loadCallback a callback to call once successful
  */
-History.prototype.loadOne = function(symbol, loadCallback) {
+History.prototype.loadOne = function(symbol) {
   var outer = this;
-  this.daily.once('value', function(snapshot) {
-    var ranges = outer.findDateBounds(symbol, snapshot);
-    async.each(ranges, function(range, rangeCallback) {
-      outer.loadYahooHistory(symbol, range[0], range[1], rangeCallback);
-    }, loadCallback);
-  });
+  return callbacks.call(this.daily.once.bind(this.daily), 'value')
+    .then(function(snapshot) {
+      var ranges = outer.findDateBounds(symbol, snapshot);
+      return when.all(ranges.map(function(range) {
+        return outer.loadYahooHistory(symbol, range[0], range[1]);
+      }));
+    });
+};
+
+/**
+ * Loads and processes data for the given symbol in the range of the given timestamps.
+ */
+History.prototype.loadYahooHistory = function(symbol, startTime, endTime) {
+  var options = {
+    symbol: symbol,
+    from: this.sim.toDateKey(new Date(startTime)),
+    to: this.sim.toDateKey(new Date(endTime))
+  };
+  this.sim.progress('Loading ' + symbol + ' from=' + options.from + ', to=' + options.to);
+
+  return nodefn.call(yahooFinance.historical, options)
+    .then(this.processAll.bind(this));
+};
+
+/**
+ * Processes all the given bars and returns a Promise that they'll be stored in the /history tree.
+ * @returns a promise
+ */
+History.prototype.processAll = function(bars) {
+  var outer = this;
+  return when.all(bars.map(function(bar) {
+    outer.processOne(bar);
+  }));
+};
+
+History.prototype.processOne = function(bar) {
+  var date = new Date(bar.date);
+  var key = this.sim.toDateKey(date);
+  bar.date = date.getTime();
+
+  var barRef = this.daily.child(key).child(bar.symbol);
+  return nodefn.call(barRef.set.bind(barRef), bar);
 };
 
 /**
@@ -81,40 +123,5 @@ History.prototype.findDateBounds = function(symbol, dailySnapshot) {
   }
   return ranges;
 };
-
-/**
- * Loads and processes data for the given symbol in the range of the given timestamps.
- */
-History.prototype.loadYahooHistory = function(symbol, startTime, endTime, loadCallback) {
-  var outer = this;
-  var startDate = this.sim.toDateKey(new Date(startTime));
-  var endDate = this.sim.toDateKey(new Date(endTime));
-  this.sim.progress('Loading ' + symbol + ' from=' + startDate + ', to=' + endDate);
-
-  yahooFinance.historical({
-    symbol: symbol,
-    from: startDate,
-    to: endDate
-  }, function(err, quotes) {
-    if (err) {
-      loadCallback(err);
-      return;
-    }
-    async.each(quotes, function(bar, cb) {
-      var date = new Date(bar.date);
-      var key = outer.sim.toDateKey(date);
-      bar.date = date.getTime();
-      outer.daily.child(key).child(bar.symbol).set(bar, cb);
-    }, loadCallback);
-  });
-};
-
-function pad(width, val) {
-  val = val.toString();
-  while (val.length < width) {
-    val = '0' + val;
-  }
-  return val;
-}
 
 module.exports = History;

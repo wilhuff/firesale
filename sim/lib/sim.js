@@ -44,6 +44,14 @@ Simulation.prototype.toDateKey = function(date) {
   return year + '-' + month + '-' + day;
 }
 
+Simulation.prototype.error = function(err, message) {
+  message = 'ERROR: ' + message + ': ' + err;
+  this.val.op = message;
+  this.ref().update({'op': message});
+  console.log('Progress: ' + message);
+  return err;
+};
+
 Simulation.prototype.progress = function(message) {
   this.val.op = message;
   this.ref().update({'op': message});
