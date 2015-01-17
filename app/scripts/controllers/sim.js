@@ -12,7 +12,7 @@ angular.module('firesaleApp')
     $scope.symbols = '';
     $scope.running = null;
 
-    $scope.startDate = new Date(2013, 0, 1);  // January 1
+    $scope.startDate = new Date(Date.UTC(2013, 0, 2));
     $scope.endDate = new Date(); // Today
 
     $scope.simulate = function() {
@@ -20,11 +20,24 @@ angular.module('firesaleApp')
 
       var ref = fbutil.ref('simulations').push({
         symbols: $scope.symbols,
-        startDate: $scope.startDate.getTime(),
-        endDate: $scope.endDate.getTime(),
-        started: Firebase.ServerValue.TIMESTAMP,
+        startTime: toMidnightTimestamp($scope.startDate),
+        endTime: toMidnightTimestamp($scope.endDate),
+        requestTime: Firebase.ServerValue.TIMESTAMP,
         op: 'Starting...'
       });
       $scope.running = $firebase(ref).$asObject();
     }
   });
+
+/**
+ * Converts between a local date and midnight UTC of the same date.
+ * @param date
+ */
+function toMidnightTimestamp(date) {
+  // Truncate back to midnight local time
+  date = new Date(date);
+  date.setHours(0, 0, 0, 0);
+
+  // Offset the UTC timestamp with the timezone offset to get the equivalent midnight UTC
+  return date.getTime() - date.getTimezoneOffset() * 60000;
+}

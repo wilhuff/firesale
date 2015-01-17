@@ -6,8 +6,7 @@ var yahooFinance = require('yahoo-finance');
 function Simulation(sim, ref) {
   this.sim = sim;
   this.ref = ref;
-  this.symbols = util.splitCommas(sim.symbols)
-  new Date(Date.parse(sim.startDate))
+  this.symbols = util.splitCommas(sim.symbols);
 
   this.daily = this.ref.root().child('history/daily');
 }
@@ -18,7 +17,7 @@ function Simulation(sim, ref) {
 Simulation.prototype.start = function() {
   this.symbols.forEach(this.loadHistory.bind(this));
   this.progress('Started');
-}
+};
 
 /**
  * Loads history for one symbol.
@@ -26,80 +25,113 @@ Simulation.prototype.start = function() {
  * @param symbol a ticker symbol, e.g. "SPY"
  */
 Simulation.prototype.loadHistory = function(symbol) {
-  this.progress('Loading ' + symbol + '...');
-
   var outer = this;
-  this.daily.once('value', function (snapshot) {
-    var haveStartDate = null;
-    var haveEndDate = null;
-
-    // Find the first occurrence of the symbol within a date node.
-    snapshot.forEach(function (dateNode) {
-      if (dateNode.hasChild(symbol)) {
-        var key = dateNode.key();
-        if (haveStartDate === null) {
-          haveStartDate = key;
-        }
-        haveEndDate = key;
-      }
-
-      return false; // continue iteration
+  this.daily.once('value', function(snapshot) {
+    var ranges = outer.findDateBounds(symbol, snapshot);
+    ranges.forEach(function(range) {
+      outer.loadYahooHistory(symbol, range[0], range[1]);
     });
+  });
+};
 
-    if (haveStartDate === null) {
-      // No data exists yet, just load the whole thing.
-      outer.loadYahooHistory(symbol, outer.sim.start, outer.sim.end);
-    } else {
-      // data surrounding
-      if (outer.sim.start < haveStartDate) {
-        outer.loadYahooHistory(symbol, outer.sim.start, haveStartDate);
-      }
-      if (haveEndDate < outer.sim.end) {
-        outer.loadYahooHistory(symbol, haveEndDate, outer.sim.end);
+/**
+ * Searches through a snapshot to find the bounds of data to load, given the intended simulation
+ * duration.
+ *
+ * @param symbol the symbol to look for.
+ * @param dailySnapshot a DataSnapshot of /history/daily.
+ * @returns {Array} an array of ranges, where each range is a two-element array of start and
+ *     end bounds to load.
+ */
+Simulation.prototype.findDateBounds = function(symbol, dailySnapshot) {
+  var foundStart = null;
+  var foundEnd = null;
+
+  // Find the first occurrence of the symbol within a date node.
+  dailySnapshot.forEach(function(dateNode) {
+    var val = dateNode.val();
+    var bar = val[symbol];
+    if (bar) {
+      var date = bar.date;
+      if (date) {
+        if (foundStart === null) {
+          foundStart = date;
+        }
+        foundEnd = date;
       }
     }
-  });
-}
 
-Simulation.prototype.loadYahooHistory = function(symbol, startDate, endDate) {
-  this.progress('Loading ' + symbol + ' from=' + startDate + ', to=' + endDate);
+    return false; // continue iteration
+  });
+
+  var ranges = [];
+  if (foundStart === null) {
+    // No data exists yet, just load the whole thing.
+    ranges.push([this.sim.startTime, this.sim.endTime]);
+
+  } else {
+    if (this.sim.startTime < foundStart) {
+      ranges.push([this.sim.startTime, foundStart]);
+    }
+    if (foundEnd < this.sim.endTime) {
+      ranges.push([foundEnd, this.sim.endTime]);
+    }
+  }
+  return ranges;
+};
+
+/**
+ * Loads and processes data for the given symbol in the range of the given timestamps.
+ */
+Simulation.prototype.loadYahooHistory = function(symbol, startTime, endTime) {
+  var outer = this;
+  var startDate = new Date(parseInt(startTime));
+  var endDate = new Date(parseInt(endTime));
+  this.progress('Loading ' + symbol
+      + ' from=' + toDateKey(startDate)
+      + ', to=' + toDateKey(endDate));
   yahooFinance.historical({
     symbol: symbol,
-    from: startDate,
-    to: endDate
-  }, this.processQuotes.bind(this));
-}
-
-Simulation.prototype.processQuotes = function(err, quotes) {
-  if (err) {
-    throw err;
-  }
-  var outer = this;
-  quotes.forEach(function (bar) {
-    var date = dayStamp(new Date(Date.parse(bar.date)));
-    outer.daily.child(date).child(bar.symbol).set(bar);
+    from: toDateKey(startDate),
+    to: toDateKey(endDate)
+  }, function(err, quotes) {
+    if (err) {
+      throw err;
+    }
+    quotes.forEach(function(bar) {
+      var date = new Date(bar.date);
+      var key = toDateKey(date);
+      bar.date = date.getTime();
+      outer.daily.child(key).child(bar.symbol).set(bar);
+    });
   });
-}
+};
 
 Simulation.prototype.progress = function(message) {
   this.sim.op = message;
   this.ref.update({'op': message});
   console.log('Simulation: ' + message);
+};
+
+/**
+ * Creates a timestamp string from a Date.
+ *
+ * @param {Date} date
+ * @returns {string}
+ */
+function toDateKey(date) {
+  var year = pad(4, date.getUTCFullYear());
+  var month = pad(2, date.getUTCMonth() + 1);
+  var day = pad(2, date.getUTCDate());
+  return year + '-' + month + '-' + day;
 }
 
-function pad(num, width) {
-  var val = num.toString();
+function pad(width, val) {
+  val = val.toString();
   while (val.length < width) {
     val = '0' + val;
   }
   return val;
-}
-
-function dayStamp(date) {
-  var year = pad(date.getFullYear(), 4);
-  var month = pad(date.getMonth() + 1, 2);
-  var day = pad(date.getDate(), 2);
-  return year + '-' + month + '-' + day;
 }
 
 module.exports = Simulation;
