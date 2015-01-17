@@ -1,5 +1,6 @@
 'use strict';
 
+var async = require('async');
 var util = require('./util');
 var yahooFinance = require('yahoo-finance');
 
@@ -15,22 +16,26 @@ function Simulation(sim, ref) {
  * Starts the simulation.
  */
 Simulation.prototype.start = function() {
-  this.symbols.forEach(this.loadHistory.bind(this));
-  this.progress('Started');
+  var outer = this;
+  async.each(this.symbols, this.loadHistory.bind(this), function(err) {
+    outer.progress('Historical data loaded');
+  })
 };
 
 /**
  * Loads history for one symbol.
  *
  * @param symbol a ticker symbol, e.g. "SPY"
+ * @param cb a callback to call once successful
  */
-Simulation.prototype.loadHistory = function(symbol) {
+Simulation.prototype.loadHistory = function(symbol, cb) {
   var outer = this;
   this.daily.once('value', function(snapshot) {
     var ranges = outer.findDateBounds(symbol, snapshot);
     ranges.forEach(function(range) {
       outer.loadYahooHistory(symbol, range[0], range[1]);
     });
+    cb(null);
   });
 };
 
