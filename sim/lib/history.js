@@ -4,12 +4,10 @@ var async = require('async');
 var util = require('./util');
 var yahooFinance = require('yahoo-finance');
 
-function History(sim, ref) {
+function History(sim) {
   this.sim = sim;
-  this.ref = ref;
-  this.symbols = util.splitCommas(sim.symbols);
 
-  this.daily = this.ref.root().child('history/daily');
+  this.daily = sim.root().child('history/daily');
 }
 
 /**
@@ -17,8 +15,8 @@ function History(sim, ref) {
  */
 History.prototype.load = function() {
   var outer = this;
-  async.each(this.symbols, this.loadOne.bind(this), function(err) {
-    outer.progress('Historical data loaded');
+  async.each(this.sim.symbols, this.loadOne.bind(this), function(err) {
+    outer.sim.progress('Historical data loaded');
   })
 };
 
@@ -26,16 +24,15 @@ History.prototype.load = function() {
  * Loads history for one symbol.
  *
  * @param symbol a ticker symbol, e.g. "SPY"
- * @param cb a callback to call once successful
+ * @param loadCallback a callback to call once successful
  */
-History.prototype.loadOne = function(symbol, cb) {
+History.prototype.loadOne = function(symbol, loadCallback) {
   var outer = this;
   this.daily.once('value', function(snapshot) {
     var ranges = outer.findDateBounds(symbol, snapshot);
-    ranges.forEach(function(range) {
-      outer.loadYahooHistory(symbol, range[0], range[1]);
-    });
-    cb(null);
+    async.each(ranges, function(range, rangeCallback) {
+      outer.loadYahooHistory(symbol, range[0], range[1], rangeCallback);
+    }, loadCallback);
   });
 };
 
@@ -88,48 +85,29 @@ History.prototype.findDateBounds = function(symbol, dailySnapshot) {
 /**
  * Loads and processes data for the given symbol in the range of the given timestamps.
  */
-History.prototype.loadYahooHistory = function(symbol, startTime, endTime) {
+History.prototype.loadYahooHistory = function(symbol, startTime, endTime, loadCallback) {
   var outer = this;
-  var startDate = new Date(parseInt(startTime));
-  var endDate = new Date(parseInt(endTime));
-  this.progress('Loading ' + symbol
-      + ' from=' + toDateKey(startDate)
-      + ', to=' + toDateKey(endDate));
+  var startDate = this.sim.toDateKey(new Date(startTime));
+  var endDate = this.sim.toDateKey(new Date(endTime));
+  this.sim.progress('Loading ' + symbol + ' from=' + startDate + ', to=' + endDate);
+
   yahooFinance.historical({
     symbol: symbol,
-    from: toDateKey(startDate),
-    to: toDateKey(endDate)
+    from: startDate,
+    to: endDate
   }, function(err, quotes) {
     if (err) {
-      throw err;
+      loadCallback(err);
+      return;
     }
-    quotes.forEach(function(bar) {
+    async.each(quotes, function(bar, cb) {
       var date = new Date(bar.date);
-      var key = toDateKey(date);
+      var key = outer.sim.toDateKey(date);
       bar.date = date.getTime();
-      outer.daily.child(key).child(bar.symbol).set(bar);
-    });
+      outer.daily.child(key).child(bar.symbol).set(bar, cb);
+    }, loadCallback);
   });
 };
-
-History.prototype.progress = function(message) {
-  this.sim.op = message;
-  this.ref.update({'op': message});
-  console.log('History: ' + message);
-};
-
-/**
- * Creates a timestamp string from a Date.
- *
- * @param {Date} date
- * @returns {string}
- */
-function toDateKey(date) {
-  var year = pad(4, date.getUTCFullYear());
-  var month = pad(2, date.getUTCMonth() + 1);
-  var day = pad(2, date.getUTCDate());
-  return year + '-' + month + '-' + day;
-}
 
 function pad(width, val) {
   val = val.toString();

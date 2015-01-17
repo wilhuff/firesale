@@ -1,6 +1,7 @@
 'use strict';
 
 var History = require('./history');
+var Simulation = require('./sim');
 
 function MainCtrl(firebase) {
   this.firebase = firebase;
@@ -16,9 +17,9 @@ MainCtrl.prototype.watch = function() {
   // once with the last simulation
   var sims = this.firebase.child('simulations');
   sims.endAt().limitToLast(1).on('child_added', function(snapshot) {
-    var val = snapshot.val();
-    if (val.op === 'Starting...') {
-      new History(val, snapshot.ref()).load();
+    var sim = new Simulation(snapshot);
+    if (sim.incomplete()) {
+      new History(sim).load();
     }
   });
 }
