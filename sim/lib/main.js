@@ -1,6 +1,6 @@
 'use strict';
 
-var Simulation = require('./sim');
+var History = require('./history');
 
 function MainCtrl(firebase) {
   this.firebase = firebase;
@@ -18,8 +18,7 @@ MainCtrl.prototype.watch = function() {
   sims.endAt().limitToLast(1).on('child_added', function(snapshot) {
     var val = snapshot.val();
     if (val.op === 'Starting...') {
-      var sim = new Simulation(val, snapshot.ref());
-      sim.start();
+      new History(val, snapshot.ref()).load();
     }
   });
 }

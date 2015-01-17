@@ -4,7 +4,7 @@ var async = require('async');
 var util = require('./util');
 var yahooFinance = require('yahoo-finance');
 
-function Simulation(sim, ref) {
+function History(sim, ref) {
   this.sim = sim;
   this.ref = ref;
   this.symbols = util.splitCommas(sim.symbols);
@@ -13,11 +13,11 @@ function Simulation(sim, ref) {
 }
 
 /**
- * Starts the simulation.
+ * Loads all history defined for the simulation.
  */
-Simulation.prototype.start = function() {
+History.prototype.load = function() {
   var outer = this;
-  async.each(this.symbols, this.loadHistory.bind(this), function(err) {
+  async.each(this.symbols, this.loadOne.bind(this), function(err) {
     outer.progress('Historical data loaded');
   })
 };
@@ -28,7 +28,7 @@ Simulation.prototype.start = function() {
  * @param symbol a ticker symbol, e.g. "SPY"
  * @param cb a callback to call once successful
  */
-Simulation.prototype.loadHistory = function(symbol, cb) {
+History.prototype.loadOne = function(symbol, cb) {
   var outer = this;
   this.daily.once('value', function(snapshot) {
     var ranges = outer.findDateBounds(symbol, snapshot);
@@ -48,7 +48,7 @@ Simulation.prototype.loadHistory = function(symbol, cb) {
  * @returns {Array} an array of ranges, where each range is a two-element array of start and
  *     end bounds to load.
  */
-Simulation.prototype.findDateBounds = function(symbol, dailySnapshot) {
+History.prototype.findDateBounds = function(symbol, dailySnapshot) {
   var foundStart = null;
   var foundEnd = null;
 
@@ -88,7 +88,7 @@ Simulation.prototype.findDateBounds = function(symbol, dailySnapshot) {
 /**
  * Loads and processes data for the given symbol in the range of the given timestamps.
  */
-Simulation.prototype.loadYahooHistory = function(symbol, startTime, endTime) {
+History.prototype.loadYahooHistory = function(symbol, startTime, endTime) {
   var outer = this;
   var startDate = new Date(parseInt(startTime));
   var endDate = new Date(parseInt(endTime));
@@ -112,10 +112,10 @@ Simulation.prototype.loadYahooHistory = function(symbol, startTime, endTime) {
   });
 };
 
-Simulation.prototype.progress = function(message) {
+History.prototype.progress = function(message) {
   this.sim.op = message;
   this.ref.update({'op': message});
-  console.log('Simulation: ' + message);
+  console.log('History: ' + message);
 };
 
 /**
@@ -139,4 +139,4 @@ function pad(width, val) {
   return val;
 }
 
-module.exports = Simulation;
+module.exports = History;
