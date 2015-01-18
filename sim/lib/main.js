@@ -1,5 +1,6 @@
 'use strict';
 
+var EventBus = require('./event');
 var History = require('./history');
 var MarketHandler = require('./market');
 var Simulation = require('./sim');
@@ -27,13 +28,17 @@ MainCtrl.prototype.simulate = function(snapshot) {
   if (sim.incomplete()) {
     var history = new History(sim);
     var market = new MarketHandler(sim);
+    var events = new EventBus(sim);
 
     return history.load()
       .then(market.start.bind(market))
+      .then(events.loop.bind(events))
       .catch(function(err) {
         sim.error(err, 'Simulation failed');
       })
-      .done();
+      .done(function() {
+        sim.progress('Complete!');
+      });
   }
 };
 
