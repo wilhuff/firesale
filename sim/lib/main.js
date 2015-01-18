@@ -1,6 +1,7 @@
 'use strict';
 
 var History = require('./history');
+var MarketHandler = require('./market');
 var Simulation = require('./sim');
 
 function MainCtrl(firebase) {
@@ -25,8 +26,10 @@ MainCtrl.prototype.simulate = function(snapshot) {
   var sim = new Simulation(snapshot);
   if (sim.incomplete()) {
     var history = new History(sim);
+    var market = new MarketHandler(sim);
 
     return history.load()
+      .then(market.start.bind(market))
       .catch(function(err) {
         sim.error(err, 'Simulation failed');
       })

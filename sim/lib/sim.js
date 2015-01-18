@@ -15,6 +15,10 @@ Simulation.prototype.ref = function() {
   return this._ref;
 }
 
+Simulation.prototype.child = function(key) {
+  return this.ref().child(key);
+}
+
 Simulation.prototype.root = function() {
   return this.ref().root();
 }
