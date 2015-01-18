@@ -2,7 +2,6 @@
 
 var when = require('when');
 var nodefn = require('when/node');
-var callbacks = require('when/callbacks');
 
 
 var yahooFinance = require('yahoo-finance');
@@ -18,12 +17,9 @@ function History(sim) {
  */
 History.prototype.load = function() {
   var outer = this;
-  when.map(this.sim.symbols, this.loadOne.bind(this))
-    .then(function(results) {
+  return when.map(this.sim.symbols, this.loadOne.bind(this))
+    .then(function() {
       return outer.sim.progress('Historical data loaded');
-    })
-    .catch(function(err) {
-      return outer.sim.error(err, 'Historical data load failed: ');
     });
 };
 
@@ -34,7 +30,7 @@ History.prototype.load = function() {
  */
 History.prototype.loadOne = function(symbol) {
   var outer = this;
-  return callbacks.call(this.daily.once.bind(this.daily), 'value')
+  return this.daily.once('value')
     .then(function(snapshot) {
       var ranges = outer.findDateBounds(symbol, snapshot);
       return when.all(ranges.map(function(range) {
@@ -65,7 +61,7 @@ History.prototype.loadYahooHistory = function(symbol, startTime, endTime) {
 History.prototype.processAll = function(bars) {
   var outer = this;
   return when.all(bars.map(function(bar) {
-    outer.processOne(bar);
+    return outer.processOne(bar);
   }));
 };
 
@@ -75,7 +71,7 @@ History.prototype.processOne = function(bar) {
   bar.date = date.getTime();
 
   var barRef = this.daily.child(key).child(bar.symbol);
-  return nodefn.call(barRef.set.bind(barRef), bar);
+  return barRef.set(bar);
 };
 
 /**

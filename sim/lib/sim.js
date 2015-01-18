@@ -48,7 +48,7 @@ Simulation.prototype.error = function(err, message) {
   message = 'ERROR: ' + message + ': ' + err;
   this.val.op = message;
   this.ref().update({'op': message});
-  console.log('Progress: ' + message);
+  console.log('Progress: ' + message + '\n' + err.stack);
   return err;
 };
 
