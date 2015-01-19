@@ -102,6 +102,7 @@ EventBus.prototype.next = function() {
 function EventClient(sim, kind) {
   this.sim = sim;
   this.events = sim.child('events').child(kind);
+  this.inbox = sim.child('events').child('inbox');
   this.callback = null;
 }
 
@@ -126,6 +127,10 @@ EventClient.prototype.unwatch = function() {
   this.callback = null;
 };
 
+EventClient.prototype.publish = function(event) {
+  event = this.sim.validateEvent(event);
+  this.inbox.push(event);
+};
 
 module.exports = {
   EventBus: EventBus,

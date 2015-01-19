@@ -33,6 +33,26 @@ Simulation.prototype.validateEvent = function(event) {
 
 Simulation.prototype.newEventClient = function(kind) {
   return new EventClient(this, kind);
+};
+
+Simulation.prototype.newSignal = function(barEvent, levels) {
+  var signal = {
+    type: 'signal',
+    timestamp: barEvent.timestamp,
+    counter: this.counter++
+  };
+
+  _.assign(signal, levels);
+  return signal;
+};
+
+Simulation.prototype.forEachBar = function(barEvent, callback) {
+  this.symbols.forEach(function(symbol) {
+    var bar = barEvent[symbol];
+    if (typeof bar !== 'undefined') {
+      callback(bar);
+    }
+  })
 }
 
 Simulation.prototype.ref = function() {
