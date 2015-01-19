@@ -1,6 +1,6 @@
 'use strict';
 
-var EventBus = require('./event');
+var EventBus = require('./event').EventBus;
 var History = require('./history');
 var Simulation = require('./sim');
 

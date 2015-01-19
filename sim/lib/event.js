@@ -5,7 +5,7 @@ var PriorityQueue = require('js-priority-queue');
 function EventBus(sim) {
   this.sim = sim;
   this.events = sim.child('events');
-  this.inbox = sim.child('inbox');
+  this.inbox = sim.newEventClient('inbox');
 
   this.queue = new PriorityQueue({comparator: orderEvents});
 
@@ -79,33 +79,19 @@ EventBus.prototype.handleInbox = function(snapshot) {
 };
 
 /**
- * Starts a listener for events arriving via the inbox at $sim/events/inbox.
- */
-EventBus.prototype.watchInbox = function() {
-  var callback = this.handleInbox.bind(this);
-  this.inbox.on('child_added', callback);
-};
-
-EventBus.prototype.unwatchInbox = function() {
-  // TODO(mcg): unregister by reference to handleInbox.
-  // This doesn't work yet because the callback actually used by PromisedFirebase is ephemeral
-  // and untracked.
-  this.inbox.off('child_added');
-};
-
-/**
  * Runs the main event loop until no further events are available.
  * @returns a Promise for the final event invocation.
  */
 EventBus.prototype.loop = function() {
   console.log('Starting event loop');
-  this.watchInbox();
+
+  this.inbox.watch(this.handleInbox.bind(this));
   return this.next();
 };
 
 EventBus.prototype.next = function() {
   if (!this.queue.length) {
-    this.unwatchInbox();
+    this.inbox.unwatch();
     return;
   }
 
@@ -124,4 +110,34 @@ EventBus.prototype.next = function() {
     });
 };
 
-module.exports = EventBus;
+/**
+ * Creates an EventClient that abstracts away event delivery details.
+ * @constructor
+ */
+function EventClient(sim, kind) {
+  this.sim = sim;
+  this.events = sim.child('events').child(kind);
+  this.callback = null;
+}
+
+/**
+ * Starts a listener for events arriving via the inbox at $sim/events/inbox.
+ */
+EventClient.prototype.watch = function(callback) {
+  this.callback = callback;
+  this.events.on('child_added', this.callback);
+};
+
+EventClient.prototype.unwatch = function() {
+  // TODO(mcg): unregister by reference to the callback
+  // This doesn't work yet because the callback actually used by PromisedFirebase is ephemeral
+  // and not tracked anywhere. For now just punt and kick everyone off when anyone unwatches.
+  this.events.off('child_added');
+  this.callback = null;
+};
+
+
+module.exports = {
+  EventBus: EventBus,
+  EventClient: EventClient
+};

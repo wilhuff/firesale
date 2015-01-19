@@ -1,5 +1,6 @@
 'use strict';
 
+var EventClient = require('./event').EventClient;
 var util = require('./util');
 
 function Simulation(snapshot) {
@@ -9,6 +10,10 @@ function Simulation(snapshot) {
   this.symbols = util.splitCommas(this.val.symbols);
   this.startTime = this.val.startTime;
   this.endTime = this.val.endTime;
+}
+
+Simulation.prototype.newEventClient = function(kind) {
+  return new EventClient(this, kind);
 }
 
 Simulation.prototype.ref = function() {
