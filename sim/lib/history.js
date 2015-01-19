@@ -69,16 +69,13 @@ History.prototype.processOne = function(bar) {
   var date = new Date(bar.date);
   delete bar['date'];
 
-  var symbol = bar.symbol;
-  delete bar['symbol'];
-
   var key = this.sim.toDateKey(date);
 
   var update = {
     type: 'bar',
     timestamp: date.getTime()
   }
-  update[symbol] = bar;
+  update[bar.symbol] = bar;
 
   return this.daily.child(key)
     .update(update);

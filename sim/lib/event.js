@@ -2,15 +2,13 @@
 
 var PriorityQueue = require('js-priority-queue');
 
+
 function EventBus(sim) {
   this.sim = sim;
   this.events = sim.child('events');
   this.inbox = sim.newEventClient('inbox');
 
   this.queue = new PriorityQueue({comparator: orderEvents});
-
-  // Tie-breaker for events that happen at the same time, incremented for each new event.
-  this.counter = 1;
 }
 
 /**
@@ -50,32 +48,19 @@ EventBus.prototype.seed = function(ref) {
     .endAt(this.sim.endDateKey() + '~')
     .once('value')
     .then(function(value) {
-      value.forEach(outer.enqueueEvent.bind(outer));
+      value.forEach(function(snapshot) {
+        outer.enqueueEvent(snapshot.val());
+      });
     });
 };
 
 /**
  * Enqueues an event in the internal priority queue.
  *
- * @param snapshot a DataSnapshot representing the contents of the event.
+ * @param event An event object
  */
-EventBus.prototype.enqueueEvent = function(snapshot) {
-  var event = snapshot.val();
-  event.counter = this.counter++;
-  this.queue.queue(event);
-};
-
-/**
- * Handles a new event arriving in the event inbox. This calls enqueueEvent and then removes the
- * data in the inbox.
- *
- * @param snapshot a DataSnapshot representing the contents of the event. The data behind this
- *     snapshot will be deleted.
- */
-EventBus.prototype.handleInbox = function(snapshot) {
-  this.enqueueEvent(snapshot);
-  snapshot.ref().remove()
-    .done();
+EventBus.prototype.enqueueEvent = function(event) {
+  this.queue.queue(this.sim.validateEvent(event));
 };
 
 /**
@@ -85,7 +70,7 @@ EventBus.prototype.handleInbox = function(snapshot) {
 EventBus.prototype.loop = function() {
   console.log('Starting event loop');
 
-  this.inbox.watch(this.handleInbox.bind(this));
+  this.inbox.watch(this.enqueueEvent.bind(this));
   return this.next();
 };
 
@@ -122,9 +107,14 @@ function EventClient(sim, kind) {
 
 /**
  * Starts a listener for events arriving via the inbox at $sim/events/inbox.
+ *
+ * @param callback a callback which takes an event object (not a DataSnapshot).
  */
 EventClient.prototype.watch = function(callback) {
-  this.callback = callback;
+  this.callback = function(snapshot) {
+    var val = snapshot.val();
+    callback(val);
+  };
   this.events.on('child_added', this.callback);
 };
 

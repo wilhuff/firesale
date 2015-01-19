@@ -2,6 +2,8 @@
 
 var EventClient = require('./event').EventClient;
 var util = require('./util');
+var _ = require('lodash');
+
 
 function Simulation(snapshot) {
   this.val = snapshot.val();
@@ -10,7 +12,24 @@ function Simulation(snapshot) {
   this.symbols = util.splitCommas(this.val.symbols);
   this.startTime = this.val.startTime;
   this.endTime = this.val.endTime;
+
+  // Tie-breaker for events that happen at the same time, incremented for each new event.
+  this.counter = 1;
 }
+
+Simulation.prototype.validateEvent = function(event) {
+  if (!event.type) {
+    throw Error('Event missing type: ' + JSON.stringify(event));
+  }
+  if (!event.timestamp) {
+    throw Error('Event missing timestamp: ' + JSON.stringify(event));
+  }
+  if (!event.counter) {
+    event.counter = this.counter++;
+  }
+
+  return event;
+};
 
 Simulation.prototype.newEventClient = function(kind) {
   return new EventClient(this, kind);
