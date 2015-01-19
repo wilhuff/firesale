@@ -11,6 +11,17 @@ function PromisedFirebase(delegate) {
   this.delegate = delegate;
 }
 
+PromisedFirebase.prototype.path = function() {
+  var root = this.delegate.root().toString();
+  var full = this.delegate.toString();
+
+  var start = root.length;
+  while (start < full.length && full.charAt(start) === '/') {
+    start += 1;
+  }
+  return full.substring(start)
+}
+
 // Methods documented as Firebase methods
 proxy(PromisedFirebase, {
   child: wrap,

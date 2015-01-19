@@ -42,6 +42,9 @@ Simulation.prototype.endDateKey = function() {
  * @returns {string}
  */
 Simulation.prototype.toDateKey = function(date) {
+  if (!(date instanceof Date)) {
+    date = new Date(date);
+  }
   var year = pad(4, date.getUTCFullYear());
   var month = pad(2, date.getUTCMonth() + 1);
   var day = pad(2, date.getUTCDate());

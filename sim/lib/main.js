@@ -2,7 +2,6 @@
 
 var EventBus = require('./event');
 var History = require('./history');
-var MarketHandler = require('./market');
 var Simulation = require('./sim');
 
 function MainCtrl(firebase) {
@@ -27,11 +26,10 @@ MainCtrl.prototype.simulate = function(snapshot) {
   var sim = new Simulation(snapshot);
   if (sim.incomplete()) {
     var history = new History(sim);
-    var market = new MarketHandler(sim);
     var events = new EventBus(sim);
 
     return history.load()
-      .then(market.start.bind(market))
+      .then(events.seed.bind(events, history.daily))
       .then(events.loop.bind(events))
       .catch(function(err) {
         sim.error(err, 'Simulation failed');

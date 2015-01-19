@@ -9,7 +9,8 @@
     "debug": "~2.1.1",
     "firebase": "~2.1.1",
     "yahoo-finance": "~0.2.10",
-    "when": "~3.6.4"
+    "when": "~3.6.4",
+    "js-priority-queue": "~0.1.1"
   },
   "devDependencies": {
     "mockfirebase": "~0.9.2"

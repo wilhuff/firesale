@@ -67,11 +67,21 @@ History.prototype.processAll = function(bars) {
 
 History.prototype.processOne = function(bar) {
   var date = new Date(bar.date);
-  var key = this.sim.toDateKey(date);
-  bar.date = date.getTime();
+  delete bar['date'];
 
-  var barRef = this.daily.child(key).child(bar.symbol);
-  return barRef.set(bar);
+  var symbol = bar.symbol;
+  delete bar['symbol'];
+
+  var key = this.sim.toDateKey(date);
+
+  var update = {
+    type: 'bar',
+    timestamp: date.getTime()
+  }
+  update[symbol] = bar;
+
+  return this.daily.child(key)
+    .update(update);
 };
 
 /**
