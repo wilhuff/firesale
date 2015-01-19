@@ -31,6 +31,14 @@ Simulation.prototype.validateEvent = function(event) {
   return event;
 };
 
+Simulation.prototype.eventKey = function(event) {
+  return [
+    this.toDateKey(event.timestamp),
+    event.counter,
+    event.type
+  ].join('-');
+}
+
 Simulation.prototype.newEventClient = function(kind) {
   return new EventClient(this, kind);
 };
@@ -46,11 +54,11 @@ Simulation.prototype.newSignal = function(barEvent, levels) {
   return signal;
 };
 
-Simulation.prototype.forEachBar = function(barEvent, callback) {
+Simulation.prototype.forEachSymbol = function(event, callback) {
   this.symbols.forEach(function(symbol) {
-    var bar = barEvent[symbol];
-    if (typeof bar !== 'undefined') {
-      callback(bar);
+    var value = event[symbol];
+    if (typeof value !== 'undefined') {
+      callback(symbol, value);
     }
   })
 }

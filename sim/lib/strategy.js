@@ -8,6 +8,7 @@ var _ = require('lodash');
 var util = require('./util');
 var when = require('when');
 
+
 function Strategy(sim) {
   this.sim = sim;
   this.events = sim.newEventClient('bar');
@@ -52,12 +53,12 @@ function BuyAndHold(sim) {
 }
 util.extend(Strategy, BuyAndHold);
 
-BuyAndHold.prototype.handleBar = function(barEvent) {
+BuyAndHold.prototype.handleBar = function(bars) {
   var levels = {};
-  this.sim.forEachBar(barEvent, function(bar) {
-    levels[bar.symbol] = 1;
+  this.sim.forEachSymbol(bars, function(symbol) {
+    levels[symbol] = 1;
   });
-  this.publish(barEvent, levels);
+  this.publish(bars, levels);
 };
 
 module.exports = {

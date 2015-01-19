@@ -82,15 +82,12 @@ EventBus.prototype.next = function() {
 
   var head = this.queue.dequeue();
   var type = head.type;
-  var eventKey = this.sim.toDateKey(head.timestamp);
-
-  var delivered = this.events.child(type).child(eventKey);
 
   // Deliver the event, wait for all listeners to fire and then delete the source event.
   var outer = this;
-  return delivered.set(head)
+  return this.events.child(type).push(head)
     .then(function() {
-      console.log('Event: ' + eventKey + ' processed.');
+      console.log('Event: ' + outer.sim.eventKey(head) + ' processed.');
       return outer.next();
     });
 };

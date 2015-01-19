@@ -2,8 +2,9 @@
 
 var EventBus = require('./event').EventBus;
 var History = require('./history');
+var Portfolio = require('./portfolio');
 var Simulation = require('./sim');
-var strategy = require('./strategy');
+var strategies = require('./strategy');
 
 function MainCtrl(firebase) {
   this.firebase = firebase;
@@ -28,9 +29,11 @@ MainCtrl.prototype.simulate = function(snapshot) {
   if (sim.incomplete()) {
     var history = new History(sim);
     var events = new EventBus(sim);
-    var strategy = new strategy.BuyAndHold(sim);
+    var portfolio = new Portfolio(sim, 100000);
+    var strategy = new strategies.BuyAndHold(sim);
 
     return history.load()
+      .then(portfolio.start.bind(portfolio))
       .then(strategy.start.bind(strategy))
       .then(events.seed.bind(events, history.daily))
       .then(events.loop.bind(events))
