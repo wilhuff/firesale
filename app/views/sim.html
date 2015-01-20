@@ -24,6 +24,9 @@
   </div>
 </form>
 
-<div ng-if="running">
-  <span class="bg-info">{{running.op}}</span>
+<div class="row" ng-if="running">
+  <p class="bg-info">{{running.op}}</p>
+</div>
+
+<div class="row" id="graph-value" style="width:750px;height:300px">
 </div>

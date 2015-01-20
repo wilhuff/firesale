@@ -53,8 +53,9 @@ Portfolio.prototype.reportValue = function() {
 
   var key = this.sim.toDateKey(this.lastBar.timestamp);
   this.values.child(key).set({
-    cash: this.cash,
-    securities: securitiesValue
+    type: 'total',
+    timestamp: this.lastBar.timestamp,
+    value: this.cash + securitiesValue
   });
 };
 
