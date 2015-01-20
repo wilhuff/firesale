@@ -9,6 +9,12 @@
   </div>
 
   <div class="form-group">
+    <label for="strategy">Strategy</label>
+    <input id="strategy" ng-model="strategy" class="form-control">
+    <p class="help-block">A trading strategy. Use Ivy or BuyAndHold</p>
+  </div>
+
+  <div class="form-group">
     <label for="startDate">Start Date</label>
     <input type="date" id="startDate" ng-model="startDate" class="form-control">
     <p class="help-block">The earliest date from which to simulate.</p>
@@ -28,11 +34,13 @@
   <p class="bg-info">{{running.op}}</p>
 </div>
 
+<!--
 <div ng-if="running">
   <div class="row" ng-repeat="trade in running.trades">
-    <p>{{trade.text}} <span ng-if="trade.gain">{{trade.gain}}</span></p>
+    <p>{{trade.text}}: {{trade.gain}}</p>
   </div>
 </div>
+-->
 
 <div class="row" id="graph-value" style="width:750px;height:300px">
 </div>

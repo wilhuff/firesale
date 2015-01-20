@@ -35,7 +35,10 @@ MainCtrl.prototype.simulate = function(snapshot) {
     var history = new History(sim);
     var events = new EventBus(sim);
     var portfolio = new Portfolio(sim, events, 100000);
-    var strategy = new strategies.Ivy(sim, events);
+    var strategy = this.newStrategy(sim, events);
+    if (strategy == null) {
+      return when.resolve(null);
+    }
 
     return history.load()
       .then(portfolio.start.bind(portfolio))
@@ -50,6 +53,18 @@ MainCtrl.prototype.simulate = function(snapshot) {
       });
   }
 };
+
+MainCtrl.prototype.newStrategy = function(sim, events) {
+  switch (sim.strategy) {
+    case 'Ivy':
+      return new strategies.Ivy(sim, events);
+    case 'BuyAndHold':
+      return new strategies.BuyAndHold(sim, events);
+    default:
+      sim.error(new Error('Unknown strategy ' + sim.strategy));
+      return null;
+  }
+}
 
 module.exports = MainCtrl;
 

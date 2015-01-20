@@ -8,6 +8,7 @@ function Simulation(snapshot) {
   this.val = snapshot.val();
   this._ref = snapshot.ref();
 
+  this.strategy = this.val.strategy;
   this.symbols = util.splitCommas(this.val.symbols);
   this.startTime = this.val.startTime;
   this.endTime = this.val.endTime;

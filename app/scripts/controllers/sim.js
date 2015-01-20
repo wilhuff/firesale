@@ -9,8 +9,9 @@
 angular.module('firesaleApp')
   .controller('SimCtrl', function ($scope, user, $firebase, fbutil) {
 
-    $scope.symbols = 'VTI';
+    $scope.symbols = 'VTI, VEU, IEF, VNQ, DBC';
     $scope.running = null;
+    $scope.strategy = 'Ivy';
 
     $scope.startDate = new Date(Date.UTC(2015, 0, 2));
     $scope.endDate = new Date(); // Today
@@ -25,6 +26,7 @@ angular.module('firesaleApp')
 
       var ref = fbutil.ref('simulations').push({
         symbols: $scope.symbols,
+        strategy: $scope.strategy,
         startTime: toMidnightTimestamp($scope.startDate),
         endTime: toMidnightTimestamp($scope.endDate),
         requestTime: Firebase.ServerValue.TIMESTAMP,
