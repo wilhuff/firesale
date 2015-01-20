@@ -37,7 +37,7 @@ Simulation.prototype.eventKey = function(event) {
     event.counter,
     event.type
   ].join('-');
-}
+};
 
 Simulation.prototype.newEventClient = function(kind) {
   return new EventClient(this, kind);
@@ -61,31 +61,31 @@ Simulation.prototype.forEachSymbol = function(event, callback) {
       callback(symbol, value);
     }
   })
-}
+};
 
 Simulation.prototype.ref = function() {
   return this._ref;
-}
+};
 
 Simulation.prototype.child = function(key) {
   return this.ref().child(key);
-}
+};
 
 Simulation.prototype.root = function() {
   return this.ref().root();
-}
+};
 
 Simulation.prototype.incomplete = function() {
   return this.val.op === 'Starting...';
-}
+};
 
 Simulation.prototype.startDateKey = function() {
-  return this.toDateKey(new Date(this.val.startTime));
-}
+  return this.toDateKey(this.getStartDate());
+};
 
 Simulation.prototype.endDateKey = function() {
-  return this.toDateKey(new Date(this.val.endTime));
-}
+  return this.toDateKey(this.getEndDate());
+};
 
 /**
  * Creates a timestamp string from a Date.
@@ -101,7 +101,7 @@ Simulation.prototype.toDateKey = function(date) {
   var month = pad(2, date.getUTCMonth() + 1);
   var day = pad(2, date.getUTCDate());
   return year + '-' + month + '-' + day;
-}
+};
 
 Simulation.prototype.error = function(err, message) {
   message = 'ERROR: ' + message + ': ' + err;
