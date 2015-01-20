@@ -18,16 +18,26 @@ CommandProcessor.prototype.processArgv = function() {
   });
 }
 
+function success() {
+  console.log('SUCCESS!');
+  process.exit();
+}
+
+function failure(error) {
+  console.log('ERROR: ' + error);
+  process.exit(1);
+}
+
 CommandProcessor.prototype.process = function(command) {
-  var outer = this;
   switch (command) {
-    case 'clean':
-      this.controller.cleanup(function(error) {
-        if (error) {
-          console.log('ERROR: ' + error);
-        }
-        process.exit();
-      })
+    case 'clean-sims':
+      this.controller.cleanSimulations()
+        .done(success, failure);
+      break;
+
+    case 'clean-history':
+      this.controller.cleanHistory()
+        .done(success, failure);
       break;
 
     case 'watch':

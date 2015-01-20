@@ -10,8 +10,13 @@ function MainCtrl(firebase) {
   this.firebase = firebase;
 }
 
-MainCtrl.prototype.cleanup = function() {
+MainCtrl.prototype.cleanSimulations = function() {
   var sims = this.firebase.child('simulations');
+  return sims.remove();
+};
+
+MainCtrl.prototype.cleanHistory = function() {
+  var sims = this.firebase.child('history');
   return sims.remove();
 };
 
