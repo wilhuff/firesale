@@ -5,6 +5,8 @@ dist
 .sass-cache
 bower_components
 
+sim/secret.json
+
 *.swp
 .idea/dictionaries
 .idea/workspace.xml
