@@ -67,14 +67,16 @@ History.prototype.processAll = function(bars) {
 
 History.prototype.processOne = function(bar) {
   var date = new Date(bar.date);
-  delete bar['date'];
-
+  var timestamp = date.getTime();
   var key = this.sim.toDateKey(date);
+
+  delete bar['date'];
+  bar['timestamp'] = timestamp;
 
   var update = {
     type: 'bar',
-    timestamp: date.getTime()
-  }
+    timestamp: timestamp
+  };
   update[bar.symbol] = bar;
 
   return this.daily.child(key)
@@ -99,12 +101,12 @@ History.prototype.findDateBounds = function(symbol, dailySnapshot) {
     var val = dateNode.val();
     var bar = val[symbol];
     if (bar) {
-      var date = bar.date;
-      if (date) {
+      var timestamp = bar.timestamp;
+      if (timestamp) {
         if (foundStart === null) {
-          foundStart = date;
+          foundStart = timestamp;
         }
-        foundEnd = date;
+        foundEnd = timestamp;
       }
     }
 
