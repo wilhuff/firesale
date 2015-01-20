@@ -1,46 +1,47 @@
 
 <h2>Simulate a portfolio</h2>
 
-<form>
-  <div class="form-group">
-    <label for="symbols">Symbols</label>
-    <input id="symbols" placeholder="Symbols..." ng-model="symbols" class="form-control">
-    <p class="help-block">A list of ticker symbols</p>
-  </div>
+<div class="row">
+  <form>
+    <div class="form-group">
+      <label for="symbols">Symbols</label>
+      <input id="symbols" placeholder="Symbols..." ng-model="symbols" class="form-control">
+      <p class="help-block">A list of ticker symbols</p>
+    </div>
 
-  <div class="form-group">
-    <label for="strategy">Strategy</label>
-    <input id="strategy" ng-model="strategy" class="form-control">
-    <p class="help-block">A trading strategy. Use Ivy or BuyAndHold</p>
-  </div>
+    <div class="form-group">
+      <label for="strategy">Strategy</label>
+      <input id="strategy" ng-model="strategy" class="form-control">
+      <p class="help-block">A trading strategy. Use Ivy or BuyAndHold</p>
+    </div>
 
-  <div class="form-group">
-    <label for="startDate">Start Date</label>
-    <input type="date" id="startDate" ng-model="startDate" class="form-control">
-    <p class="help-block">The earliest date from which to simulate.</p>
-  </div>
+    <div class="form-group">
+      <label for="startDate">Start Date</label>
+      <input type="date" id="startDate" ng-model="startDate" class="form-control">
+      <p class="help-block">The earliest date from which to simulate.</p>
+    </div>
 
-  <div class="form-group">
-    <label for="endDate">End Date</label>
-    <input type="date" id="endDate" ng-model="endDate" class="form-control">
-  </div>
+    <div class="form-group">
+      <label for="endDate">End Date</label>
+      <input type="date" id="endDate" ng-model="endDate" class="form-control">
+    </div>
 
-  <div class="form-group">
-    <button type="submit" ng-click="simulate()" class="btn btn-primary">Go!</button>
-  </div>
-</form>
+    <div class="form-group">
+      <button type="submit" ng-click="simulate()" class="btn btn-primary">Go!</button>
+    </div>
+  </form>
+</div>
 
 <div class="row" ng-if="running">
   <p class="bg-info">{{running.op}}</p>
 </div>
 
-<!--
-<div ng-if="running">
-  <div class="row" ng-repeat="trade in running.trades">
-    <p>{{trade.text}}: {{trade.gain}}</p>
-  </div>
-</div>
--->
-
 <div class="row" id="graph-value" style="width:750px;height:300px">
+</div>
+
+<div ng-if="running">
+  <h3>Trades</h3>
+  <div class="row" ng-repeat="trade in running.trades" style="clear: both">
+    <p>{{trade.text}} {{trade.gains}}</p>
+  </div>
 </div>

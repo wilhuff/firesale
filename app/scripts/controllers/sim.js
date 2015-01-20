@@ -22,6 +22,13 @@ angular.module('firesaleApp')
     }
 
     function submit() {
+
+      // Brutalizing hack: remove the prior graph if it's there.
+      //var graph = document.getElementById('#graph-value');
+      //if (graph != null) {
+      //  graph.innerHTML = '';
+      //}
+
       console.log('Simulate symbols: ' + $scope.symbols);
 
       var ref = fbutil.ref('simulations').push({
