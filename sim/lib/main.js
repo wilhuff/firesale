@@ -35,7 +35,7 @@ MainCtrl.prototype.simulate = function(snapshot) {
     var history = new History(sim);
     var events = new EventBus(sim);
     var portfolio = new Portfolio(sim, 100000);
-    var strategy = new strategies.BuyAndHold(sim);
+    var strategy = new strategies.Ivy(sim);
 
     return history.load()
       .then(portfolio.start.bind(portfolio))

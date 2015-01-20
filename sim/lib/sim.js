@@ -18,6 +18,13 @@ function Simulation(snapshot) {
 }
 
 Simulation.prototype.validateEvent = function(event) {
+  _.forIn(event, function(value, key) {
+    if (typeof value === 'undefined') {
+      throw Error('Event has key ' + key + '=undefined: ' + JSON.stringify(event));
+    } else if (value === null) {
+      throw Error('Event has key ' + key + '=null: ' + JSON.stringify(event));
+    }
+  });
   if (!event.type) {
     throw Error('Event missing type: ' + JSON.stringify(event));
   }
@@ -77,6 +84,14 @@ Simulation.prototype.root = function() {
 
 Simulation.prototype.incomplete = function() {
   return this.val.op === 'Starting...';
+};
+
+Simulation.prototype.getStartDate = function() {
+  return new Date(this.val.startTime);
+};
+
+Simulation.prototype.getEndDate = function() {
+  return new Date(this.val.endTime);
 };
 
 Simulation.prototype.startDateKey = function() {
