@@ -27,6 +27,7 @@ function Portfolio(sim, initialCash) {
   this.positions = {};
   this.positionsLength = 0;
 
+  this.trades = sim.child('trades');
   this.values = sim.child('values');
 }
 
@@ -58,6 +59,26 @@ Portfolio.prototype.reportValue = function() {
     value: this.cash + securitiesValue
   });
 };
+
+Portfolio.prototype.reportTrade = function(type, shares, symbol, price, basis, proceeds) {
+  var description = type + ' ' + shares + ' of ' + symbol + ' @ ' + price;
+  console.log(description);
+
+  var update = {
+    timestamp: this.lastBar.timestamp,
+    type: type,
+    symbol: symbol,
+    text: description,
+    basis: basis
+  }
+
+  if (typeof proceeds !== 'undefined') {
+    // sale
+    update.proceeds = proceeds;
+    update.gains = proceeds - basis;
+  }
+  this.trades.push(update);
+}
 
 Portfolio.prototype.handleSignal = function(signal) {
   var outer = this;
@@ -92,7 +113,7 @@ Portfolio.prototype.buy = function(symbol) {
   var shares = Math.floor(availableSpend / price);
   var cost = shares * price;
 
-  console.log('Buy ' + shares + ' of ' + symbol + ' @ ' + price);
+  this.reportTrade('Buy', shares, symbol, price, cost);
 
   var position = {
     symbol: symbol,
@@ -110,7 +131,7 @@ Portfolio.prototype.sell = function(symbol) {
   var price = this.price(symbol);
   var proceeds = position.shares * price;
 
-  console.log('Sell ' + position.shares + ' of ' + symbol + ' @ ' + price);
+  this.reportTrade('Sell', position.shares, symbol, price, position.cost, proceeds);
 
   this.cash += proceeds;
   delete this.positions[symbol];

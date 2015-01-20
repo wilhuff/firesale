@@ -28,5 +28,11 @@
   <p class="bg-info">{{running.op}}</p>
 </div>
 
+<div ng-if="running">
+  <div class="row" ng-repeat="trade in running.trades">
+    <p>{{trade.text}} <span ng-if="trade.gain">{{trade.gain}}</span></p>
+  </div>
+</div>
+
 <div class="row" id="graph-value" style="width:750px;height:300px">
 </div>
