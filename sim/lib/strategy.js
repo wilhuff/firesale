@@ -70,12 +70,12 @@ BuyAndHold.prototype.handleBar = function(bars) {
  *   <li>ranks components with the highest momentum.
  *   <li>only keeps the top
  */
-function Ivy(sim, events) {
+function Ivy(sim, events, onlyTop) {
   Strategy.call(this, sim, events);
   this.monthly = new MonthlyFilter(1, sim.getStartDate());
   this.sma = new SimpleMovingAverage(10);
   this.momentum = new SimpleMomentum(3);
-  this.top = new TopValueRestriction(3);
+  this.top = new TopValueRestriction(onlyTop);
 }
 util.extend(Strategy, Ivy);
 

@@ -56,8 +56,15 @@ MainCtrl.prototype.simulate = function(snapshot) {
 
 MainCtrl.prototype.newStrategy = function(sim, events) {
   switch (sim.strategy) {
+    case 'Ivy1':
+      return new strategies.Ivy(sim, events, 1);
+    case 'Ivy2':
+      return new strategies.Ivy(sim, events, 2);
     case 'Ivy':
-      return new strategies.Ivy(sim, events);
+    case 'Ivy3':
+      return new strategies.Ivy(sim, events, 3);
+    case 'Ivy5':
+      return new strategies.Ivy(sim, events, 5);
     case 'BuyAndHold':
       return new strategies.BuyAndHold(sim, events);
     default:
