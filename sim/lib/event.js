@@ -1,15 +1,33 @@
 'use strict';
 
 var PriorityQueue = require('js-priority-queue');
+var _ = require('lodash');
 
 
 function EventBus(sim) {
   this.sim = sim;
   this.events = sim.child('events');
-  this.inbox = sim.newEventClient('inbox');
+  this.inboxClient = this.newEventClient('inbox');
+  this.inbox = this.events.child('inbox');
 
   this.queue = new PriorityQueue({comparator: orderEvents});
+
+  // Subscribers for in-memory only events.
+  this.nondurable = ['bar'];
+  this.subscribers = {};
 }
+
+EventBus.prototype.isNonDurable = function(kind) {
+  return _.contains(this.nondurable, kind);
+}
+
+EventBus.prototype.newEventClient = function(kind) {
+  if (this.isNonDurable(kind)) {
+    return new MemoryEventClient(this, kind);
+  } else {
+    return new PersistentEventClient(this, kind);
+  }
+};
 
 /**
  * Imposes a total ordering on events: first by timestamp and then by counter. The counter value
@@ -70,36 +88,58 @@ EventBus.prototype.enqueueEvent = function(event) {
 EventBus.prototype.loop = function() {
   console.log('Starting event loop');
 
-  this.inbox.watch(this.enqueueEvent.bind(this));
+  this.inboxClient.watch(this.enqueueEvent.bind(this));
   return this.next();
 };
 
 EventBus.prototype.next = function() {
   if (!this.queue.length) {
-    this.inbox.unwatch();
+    this.inboxClient.unwatch();
     return;
   }
 
   var head = this.queue.dequeue();
   var type = head.type;
 
-  // Deliver the event, wait for all listeners to fire and then delete the source event.
-  var outer = this;
-  return this.events.child(type).push(head)
-    .then(function() {
-      console.log('Event: ' + outer.sim.eventKey(head) + ' processed.');
-      return outer.next();
-    });
+  if (this.isNonDurable(type)) {
+    var subs = this.subscribers[type];
+    if (subs != null) {
+      subs.forEach(function(sub) {
+        sub(head);
+      });
+    }
+    console.log('Event: ' + this.sim.eventKey(head) + ' processed.');
+    return this.next();
+
+  } else {
+    // Deliver the event, wait for all listeners to fire and then delete the source event.
+    var outer = this;
+    return this.events.child(type).push(head)
+      .then(function() {
+        console.log('Event: ' + outer.sim.eventKey(head) + ' processed.');
+        return outer.next();
+      });
+  }
+
+};
+
+EventBus.prototype.publish = function(event) {
+  event = this.sim.validateEvent(event);
+
+  if (this.isNonDurable(event.type)) {
+    this.enqueueEvent(event);
+  } else {
+    this.inbox.push(event);
+  }
 };
 
 /**
  * Creates an EventClient that abstracts away event delivery details.
  * @constructor
  */
-function EventClient(sim, kind) {
-  this.sim = sim;
-  this.events = sim.child('events').child(kind);
-  this.inbox = sim.child('events').child('inbox');
+function PersistentEventClient(bus, kind) {
+  this.bus = bus;
+  this.events = bus.events.child(kind);
   this.callback = null;
 }
 
@@ -108,7 +148,7 @@ function EventClient(sim, kind) {
  *
  * @param callback a callback which takes an event object (not a DataSnapshot).
  */
-EventClient.prototype.watch = function(callback) {
+PersistentEventClient.prototype.watch = function(callback) {
   this.callback = function(snapshot) {
     var val = snapshot.val();
     callback(val);
@@ -116,7 +156,7 @@ EventClient.prototype.watch = function(callback) {
   this.events.on('child_added', this.callback);
 };
 
-EventClient.prototype.unwatch = function() {
+PersistentEventClient.prototype.unwatch = function() {
   // TODO(mcg): unregister by reference to the callback
   // This doesn't work yet because the callback actually used by PromisedFirebase is ephemeral
   // and not tracked anywhere. For now just punt and kick everyone off when anyone unwatches.
@@ -124,12 +164,48 @@ EventClient.prototype.unwatch = function() {
   this.callback = null;
 };
 
-EventClient.prototype.publish = function(event) {
-  event = this.sim.validateEvent(event);
-  this.inbox.push(event);
+PersistentEventClient.prototype.publish = function(event) {
+  this.bus.publish(event);
 };
 
-module.exports = {
-  EventBus: EventBus,
-  EventClient: EventClient
+
+/**
+ * Creates an EventClient that abstracts away event delivery details.
+ * @constructor
+ */
+function MemoryEventClient(bus, kind) {
+  this.bus = bus;
+  this.kind = kind;
+  this.callback = null;
+}
+
+/**
+ * Starts a listener for events arriving via the inbox at $sim/events/inbox.
+ *
+ * @param callback a callback which takes an event object (not a DataSnapshot).
+ */
+MemoryEventClient.prototype.watch = function(callback) {
+  this.callback = callback;
+  var subs = this.bus.subscribers[this.kind];
+  if (subs == null) {
+    subs = [];
+    this.bus.subscribers[this.kind] = subs;
+  }
+  subs.push(callback);
 };
+
+MemoryEventClient.prototype.unwatch = function() {
+  // TODO(mcg): unregister by reference to the callback
+  // This doesn't work yet because the callback actually used by PromisedFirebase is ephemeral
+  // and not tracked anywhere. For now just punt and kick everyone off when anyone unwatches.
+  var subs = this.bus.subscribers[this.kind];
+  var pos = subs.indexOf(callback);
+  subs.splice(pos, 1);
+  this.callback = null;
+};
+
+MemoryEventClient.prototype.publish = function(event) {
+  this.bus.publish(event);
+};
+
+module.exports = EventBus;

@@ -1,6 +1,5 @@
 'use strict';
 
-var EventClient = require('./event').EventClient;
 var util = require('./util');
 var _ = require('lodash');
 
@@ -44,10 +43,6 @@ Simulation.prototype.eventKey = function(event) {
     event.counter,
     event.type
   ].join('-');
-};
-
-Simulation.prototype.newEventClient = function(kind) {
-  return new EventClient(this, kind);
 };
 
 Simulation.prototype.newSignal = function(barEvent, levels) {

@@ -9,9 +9,9 @@ var util = require('./util');
 var when = require('when');
 
 
-function Strategy(sim) {
+function Strategy(sim, events) {
   this.sim = sim;
-  this.events = sim.newEventClient('bar');
+  this.events = events.newEventClient('bar');
 
   this.levels = {};
 }
@@ -48,8 +48,8 @@ Strategy.prototype.publish = function(barEvent, levels) {
  *
  * @constructor
  */
-function BuyAndHold(sim) {
-  Strategy.call(this, sim);
+function BuyAndHold(sim, events) {
+  Strategy.call(this, sim, events);
 }
 util.extend(Strategy, BuyAndHold);
 
@@ -70,8 +70,8 @@ BuyAndHold.prototype.handleBar = function(bars) {
  *   <li>ranks components with the highest momentum.
  *   <li>only keeps the top
  */
-function Ivy(sim) {
-  Strategy.call(this, sim);
+function Ivy(sim, events) {
+  Strategy.call(this, sim, events);
   this.monthly = new MonthlyFilter(1, sim.getStartDate());
   this.sma = new SimpleMovingAverage(10);
   this.momentum = new SimpleMomentum(3);

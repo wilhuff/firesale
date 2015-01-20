@@ -1,6 +1,6 @@
 'use strict';
 
-var EventBus = require('./event').EventBus;
+var EventBus = require('./event');
 var History = require('./history');
 var Portfolio = require('./portfolio');
 var Simulation = require('./sim');
@@ -26,7 +26,7 @@ MainCtrl.prototype.watch = function() {
 
   var sims = this.firebase.child('simulations');
   var limited = sims.endAt().limitToLast(1);
-  limited.on('child_added', this.simulate, this);
+  limited.on('child_added', this.simulate.bind(this));
 };
 
 MainCtrl.prototype.simulate = function(snapshot) {
@@ -34,8 +34,8 @@ MainCtrl.prototype.simulate = function(snapshot) {
   if (sim.incomplete()) {
     var history = new History(sim);
     var events = new EventBus(sim);
-    var portfolio = new Portfolio(sim, 100000);
-    var strategy = new strategies.Ivy(sim);
+    var portfolio = new Portfolio(sim, events, 100000);
+    var strategy = new strategies.Ivy(sim, events);
 
     return history.load()
       .then(portfolio.start.bind(portfolio))

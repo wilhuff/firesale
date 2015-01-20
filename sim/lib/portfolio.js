@@ -16,10 +16,10 @@ var when = require('when');
 // TODO(mcg): implement slippage models
 // TODO(mcg): implement rebalancing
 
-function Portfolio(sim, initialCash) {
+function Portfolio(sim, events, initialCash) {
   this.sim = sim;
-  this.bars = sim.newEventClient('bar');
-  this.signals = sim.newEventClient('signal');
+  this.bars = events.newEventClient('bar');
+  this.signals = events.newEventClient('signal');
   this.cash = initialCash;
   this.buffer = 200;
 
